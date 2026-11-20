@@ -38,6 +38,7 @@ enum _ModelState { checking, missing, downloading, ready, failed }
 
 class _HomePageState extends State<HomePage> {
   _ModelState _state = _ModelState.checking;
+  String? _errorDetail;
 
   @override
   void initState() {
@@ -53,14 +54,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _download() async {
-    setState(() => _state = _ModelState.downloading);
+    setState(() {
+      _state = _ModelState.downloading;
+      _errorDetail = null;
+    });
     try {
-      final ok = await TranslatorService.downloadModels();
+      await TranslatorService.prepareModels();
+      if (mounted) setState(() => _state = _ModelState.ready);
+    } catch (e) {
       if (mounted) {
-        setState(() => _state = ok ? _ModelState.ready : _ModelState.failed);
+        setState(() {
+          _state = _ModelState.failed;
+          _errorDetail = e.toString();
+        });
       }
-    } catch (_) {
-      if (mounted) setState(() => _state = _ModelState.failed);
     }
   }
 
@@ -81,7 +88,8 @@ class _HomePageState extends State<HomePage> {
             _ModeCard(
               icon: Icons.mic,
               title: 'โหมดฟังเสียง',
-              description: 'วางมือถือไว้ใกล้ลำโพงทีวี แอปจะฟังบทพูด'
+              description:
+                  'วางมือถือไว้ใกล้ลำโพงทีวี แอปจะฟังบทพูด'
                   'ภาษาอังกฤษแล้วแปลเป็นไทยให้ตลอด ไม่ต้องกดอะไร',
               enabled: ready,
               onTap: () => _open(const VoiceModePage()),
@@ -89,7 +97,8 @@ class _HomePageState extends State<HomePage> {
             _ModeCard(
               icon: Icons.camera_alt,
               title: 'โหมดกล้องอ่านซับ',
-              description: 'ตั้งมือถือ (แนวนอน) เล็งไปที่ทีวี ให้ซับอยู่'
+              description:
+                  'ตั้งมือถือ (แนวนอน) เล็งไปที่ทีวี ให้ซับอยู่'
                   'ในกรอบสีเหลือง แอปจะอ่านและแปลให้อัตโนมัติ '
                   'พร้อมเก็บประวัติให้อ่านย้อนหลัง',
               enabled: ready,
@@ -117,6 +126,7 @@ class _HomePageState extends State<HomePage> {
           child: ListTile(
             leading: CircularProgressIndicator(),
             title: Text('กำลังตรวจสอบภาษา...'),
+            subtitle: Text('ไม่เกิน 10 วินาที'),
           ),
         );
       case _ModelState.downloading:
@@ -136,10 +146,22 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Text(
                   _state == _ModelState.failed
-                      ? 'ดาวน์โหลดไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'
+                      ? 'ดาวน์โหลดไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่\n'
+                            '(มือถือต้องมี Google Play Services)'
                       : 'ต้องดาวน์โหลดชุดภาษาอังกฤษ-ไทยก่อนใช้งาน '
                             '(ครั้งเดียว ประมาณ 30 MB แนะนำใช้ Wi-Fi)',
                 ),
+                if (_errorDetail != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      _errorDetail!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   onPressed: _download,

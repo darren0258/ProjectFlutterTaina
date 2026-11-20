@@ -47,8 +47,10 @@ class _VoiceModePageState extends State<VoiceModePage> {
       onError: _onError,
     );
     if (!_available) {
-      setState(() => _error =
-          'มือถือเครื่องนี้ไม่รองรับการฟังเสียง หรือไม่ได้อนุญาตไมโครโฟน');
+      setState(
+        () => _error =
+            'มือถือเครื่องนี้ไม่รองรับการฟังเสียง หรือไม่ได้อนุญาตไมโครโฟน',
+      );
       return;
     }
     final locales = await _speech.locales();
@@ -184,7 +186,8 @@ class _VoiceModePageState extends State<VoiceModePage> {
             child: TranslationPanel(
               history: _history,
               liveText: _liveThai.isNotEmpty ? '$_liveThai …' : _live,
-              placeholder: _error ??
+              placeholder:
+                  _error ??
                   (_running
                       ? 'กำลังฟัง... วางมือถือไว้ใกล้ลำโพงทีวี'
                       : 'กดปุ่มด้านล่างเพื่อเริ่มฟัง'),
@@ -199,12 +202,9 @@ class _VoiceModePageState extends State<VoiceModePage> {
                 height: 56,
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor:
-                        _running ? Colors.redAccent : Colors.green,
+                    backgroundColor: _running ? Colors.redAccent : Colors.green,
                   ),
-                  onPressed: !_available
-                      ? null
-                      : (_running ? _stop : _start),
+                  onPressed: !_available ? null : (_running ? _stop : _start),
                   icon: Icon(_running ? Icons.stop : Icons.mic),
                   label: Text(
                     _running ? 'หยุดฟัง' : 'เริ่มฟังและแปล',

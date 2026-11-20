@@ -70,10 +70,7 @@ class TranslationPanel extends StatelessWidget {
                   children: [
                     Text(
                       e.translated,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 17),
                     ),
                     Text(
                       e.source,

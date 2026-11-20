@@ -203,8 +203,8 @@ class _CameraModePageState extends State<CameraModePage> {
               flex: 2,
               child: TranslationPanel(
                 history: _history,
-                placeholder: _error ??
-                    'เล็งกล้องไปที่ทีวี ให้ซับอยู่ในกรอบสีเหลือง',
+                placeholder:
+                    _error ?? 'เล็งกล้องไปที่ทีวี ให้ซับอยู่ในกรอบสีเหลือง',
               ),
             ),
           ],

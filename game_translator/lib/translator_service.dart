@@ -22,23 +22,35 @@ class TranslatorService {
 
   static final _modelManager = OnDeviceTranslatorModelManager();
 
+  /// Quick check whether the language models are already on the phone.
+  /// Returns false (instead of hanging) if ML Kit does not answer in time.
   static Future<bool> isModelReady() async {
-    return await _modelManager
-            .isModelDownloaded(TranslateLanguage.english.bcpCode) &&
-        await _modelManager.isModelDownloaded(TranslateLanguage.thai.bcpCode);
+    try {
+      final en = await _modelManager
+          .isModelDownloaded(TranslateLanguage.english.bcpCode)
+          .timeout(const Duration(seconds: 8));
+      final th = await _modelManager
+          .isModelDownloaded(TranslateLanguage.thai.bcpCode)
+          .timeout(const Duration(seconds: 8));
+      return en && th;
+    } catch (_) {
+      return false;
+    }
   }
 
-  /// Downloads the ~30 MB English/Thai models (only needed once).
-  static Future<bool> downloadModels() async {
-    final en = await _modelManager.downloadModel(
-      TranslateLanguage.english.bcpCode,
-      isWifiRequired: false,
+  /// Downloads the ~30 MB English/Thai models if needed (only once) by doing
+  /// a test translation: ML Kit's translator downloads missing models itself.
+  /// Throws with a readable message on failure or timeout.
+  static Future<void> prepareModels() async {
+    final t = OnDeviceTranslator(
+      sourceLanguage: TranslateLanguage.english,
+      targetLanguage: TranslateLanguage.thai,
     );
-    final th = await _modelManager.downloadModel(
-      TranslateLanguage.thai.bcpCode,
-      isWifiRequired: false,
-    );
-    return en && th;
+    try {
+      await t.translateText('Hello').timeout(const Duration(minutes: 5));
+    } finally {
+      await t.close();
+    }
   }
 
   Future<String> translate(String text) => _translator.translateText(text);
