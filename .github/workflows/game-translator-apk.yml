@@ -1,0 +1,56 @@
+name: Build game translator APK
+
+on:
+  push:
+    paths:
+      - "game_translator/**"
+      - ".github/workflows/game-translator-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: game_translator
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.50.1
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --release
+
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk build/game-translator.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: game-translator-apk
+          path: game_translator/build/game-translator.apk
+
+      - name: Publish to Releases (download from phone)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: game-translator-build-${{ github.run_number }}
+          name: แปลเกม (build ${{ github.run_number }})
+          prerelease: false
+          make_latest: true
+          body: |
+            ดาวน์โหลดไฟล์ game-translator.apk ด้านล่างด้วยมือถือ Android แล้วกดติดตั้ง
+            (ถ้าถาม ให้อนุญาต "ติดตั้งจากแหล่งที่ไม่รู้จัก")
+          files: game_translator/build/game-translator.apk
